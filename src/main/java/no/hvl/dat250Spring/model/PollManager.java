@@ -3,6 +3,7 @@ package no.hvl.dat250Spring.model;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.Optional;
 
 @Component
 public class PollManager {
@@ -41,4 +42,23 @@ public class PollManager {
     public void addPoll(Poll poll) {
         polls.put(poll.getID(), poll);
     }
+
+    public void removePoll(Poll poll) {
+        polls.remove(poll.getID());
+    }
+
+    public Optional<Poll> getPoll(int ID) {
+        if(polls.containsKey(ID)) {
+            return Optional.of(polls.get(ID));
+        }
+        return Optional.empty();
+    }
+
+    public Optional<User> getUser(String username) {
+        if(users.containsKey(username)) {
+            return Optional.of(users.get(username));
+        }
+        return Optional.empty();
+    }
+
 }

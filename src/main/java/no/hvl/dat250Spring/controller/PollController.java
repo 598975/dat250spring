@@ -4,31 +4,25 @@ import no.hvl.dat250Spring.model.Poll;
 import no.hvl.dat250Spring.model.PollManager;
 import no.hvl.dat250Spring.model.User;
 import no.hvl.dat250Spring.model.Vote;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/pollapp")
 public class PollController {
-    private final PollManager pollManager = new PollManager();
+    @Autowired
+    private PollManager pollManager;
 
     @GetMapping()
     public String index() {
         return "Hello World";
-    }
-
-    @PostMapping("/user")
-    public ResponseEntity<Object> createUser(@RequestBody User user) {
-        if(pollManager.getUsers().containsKey(user.getUsername()))
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username taken");
-
-        pollManager.addUser(user);
-
-        return ResponseEntity.ok().body(user);
     }
 
     @GetMapping("/polls")
@@ -39,33 +33,66 @@ public class PollController {
         return ResponseEntity.ok().body(pollManager.getPolls());
     }
 
+    @GetMapping("/polls/{pollId}")
+    public ResponseEntity<Object> displayPoll(@PathVariable int pollId) {
+        Optional<Poll> poll = pollManager.getPoll(pollId);
+        if(poll.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Poll does not exist");
+
+        return ResponseEntity.ok(poll.get());
+    }
+
     @PostMapping("/polls")
     public ResponseEntity<Object> createPoll(@RequestBody Poll poll) {
+        Optional<User> creatorOpt = pollManager.getUser(poll.getPollCreator().getUsername());
+
+        if(creatorOpt.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User does not exist");
+
+        User creator = creatorOpt.get();
 
         pollManager.addPoll(poll);
 
-        URI newPath = ServletUriComponentsBuilder.fromCurrentRequest().path("/{pollId}").buildAndExpand(poll.getID()).toUri();
+        creator.getCreatedPolls().add(poll);
 
-        return ResponseEntity.ok().body(poll);
+        return ResponseEntity.created(URI.create("/user/" + poll.getID())).body(poll);
     }
 
-    @GetMapping("/polls/{pollId}")
-    public ResponseEntity<Object> displayPoll(@PathVariable int pollId) {
-        String pollDetails = "Details for given poll: " + pollManager.getPolls().get(pollId);
+    @PutMapping("polls/{pollId}")
+    public ResponseEntity<Object> updatePoll(@PathVariable int pollId, @RequestBody Poll poll) {
+        Optional<Poll> optPoll = pollManager.getPoll(pollId);
+        Optional<User> optCreator = pollManager.getUser(poll.getPollCreator().getUsername());
 
-        return ResponseEntity.ok().body(pollDetails);
-    }
+        if(optPoll.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Poll does not exist");
+        if(optCreator.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User does not exist");
 
-    @PutMapping("/polls/{pollId}")
-    public ResponseEntity<Object> voteOnPoll(@PathVariable int pollId, @RequestBody Vote vote) {
-        pollManager.getPolls().get(pollId).addVote(vote);
+        Poll thisPoll = optPoll.get();
+        thisPoll.setPollCreator(optCreator.get());
+        thisPoll.setOptions(poll.getOptions());
+        thisPoll.setQuestion(poll.getQuestion());
+        thisPoll.setValidUntil(poll.getValidUntil());
 
-        return ResponseEntity.ok().body("Vote casted");
+        return ResponseEntity.ok(thisPoll);
     }
 
     @DeleteMapping("/polls/{pollId}")
     public ResponseEntity<Object> deletePoll(@PathVariable int pollId) {
+        if(!pollManager.getPolls().containsKey(pollId)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        for(Map.Entry<String, User> e : pollManager.getUsers().entrySet()) {
+            Optional<Vote> optVote = e.getValue().getVote(pollId);
+            if (optVote.isPresent()) {
+                Vote vote = optVote.get();
+                e.getValue().getVotes().remove(vote);
+            }
+        }
+
         pollManager.getPolls().remove(pollId);
-        return ResponseEntity.ok().body("Poll deleted");
+        return ResponseEntity.noContent().build();
     }
+
 }

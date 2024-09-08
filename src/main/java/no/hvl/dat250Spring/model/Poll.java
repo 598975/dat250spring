@@ -3,7 +3,10 @@ package no.hvl.dat250Spring.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Poll {
@@ -13,24 +16,18 @@ public class Poll {
     private Instant publishedAt;
     private Instant validUntil;
     private int ID;
-    private List<Vote> votes;
     private List<VoteOption> options;
-    private boolean isPrivate;
 
     @JsonBackReference
     private User pollCreator;
 
-    public Poll(String question, Instant validUntil, List<VoteOption> options, boolean isPrivate) {
+    public Poll(String question, Instant validUntil, List<VoteOption> options, User pollCreator) {
         this.question = question;
         this.validUntil = validUntil;
         this.options = options;
-        this.isPrivate = isPrivate;
         this.publishedAt = Instant.now();
         this.ID = idCounter.incrementAndGet();
-    }
-
-    public void addVote(Vote vote) {
-        votes.add(vote);
+        this.pollCreator = pollCreator;
     }
 
     public Instant getValidUntil() {
@@ -73,28 +70,12 @@ public class Poll {
         this.options = options;
     }
 
-    public List<Vote> getVotes() {
-        return votes;
-    }
-
-    public void setVotes(List<Vote> votes) {
-        this.votes = votes;
-    }
-
     public User getPollCreator() {
         return pollCreator;
     }
 
     public void setPollCreator(User pollCreator) {
         this.pollCreator = pollCreator;
-    }
-
-    public boolean isPrivate() {
-        return isPrivate;
-    }
-
-    public void setPrivate(boolean aPrivate) {
-        isPrivate = aPrivate;
     }
 
     @Override
@@ -104,9 +85,7 @@ public class Poll {
                 ", publishedAt=" + publishedAt +
                 ", validUntil=" + validUntil +
                 ", ID=" + ID +
-                ", votes=" + votes +
                 ", options=" + options +
-                ", isPrivate=" + isPrivate +
                 ", pollCreator=" + pollCreator +
                 '}';
     }
