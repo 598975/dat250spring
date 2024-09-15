@@ -13,6 +13,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/pollapp")
+@CrossOrigin
 public class VoteOptionController {
     @Autowired
     private PollManager pollManager;

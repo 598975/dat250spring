@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,6 +16,7 @@ public class Poll {
     private Instant validUntil;
     private int ID;
     private List<VoteOption> options;
+    private List<Vote> votes;
 
     @JsonBackReference
     private User pollCreator;
@@ -28,6 +28,7 @@ public class Poll {
         this.publishedAt = Instant.now();
         this.ID = idCounter.incrementAndGet();
         this.pollCreator = pollCreator;
+        this.votes = new ArrayList<>();
     }
 
     public Instant getValidUntil() {
@@ -76,6 +77,20 @@ public class Poll {
 
     public void setPollCreator(User pollCreator) {
         this.pollCreator = pollCreator;
+    }
+
+    public List<Vote> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(List<Vote> votes) {
+        this.votes = votes;
+    }
+
+    public Optional<Vote> getVote(String username) {
+        return this.getVotes().stream()
+                .filter(vote -> vote.getVoter().getUsername().equals(username))
+                .findAny();
     }
 
     @Override

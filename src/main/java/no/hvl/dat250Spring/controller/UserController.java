@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/pollapp")
+@CrossOrigin
 public class UserController {
     @Autowired
     private PollManager pollManager;

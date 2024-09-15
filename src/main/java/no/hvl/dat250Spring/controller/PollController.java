@@ -10,12 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/pollapp")
+@CrossOrigin
 public class PollController {
     @Autowired
     private PollManager pollManager;

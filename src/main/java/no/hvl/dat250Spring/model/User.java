@@ -10,7 +10,6 @@ import java.util.Optional;
 public class User {
     private String username;
     private String email;
-    private int ID;
     private List<Vote> votes;
 
     @JsonManagedReference
